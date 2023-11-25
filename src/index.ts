@@ -54,11 +54,24 @@ const hotelSchema = new mongoose.Schema({
 },
 
 });
+const hotelBookingSchema = new mongoose.Schema({
+    pays: { type: String, required: true },
+    name: { type: String, required: true },
+    location:{type: String,required: true},
+    price: { type: Number, required: true },
+    description:{type: String,required: true},
+    nbRoom:{type: Number,required: true},
+    date:{type: String,required: true},
+    duration:{type: Number,required: true}
+});
+
 
 
 const Flight = mongoose.model('Flight', flightSchema);
 
 const Hotel = mongoose.model('Hotel', hotelSchema);
+const Booking = mongoose.model('Booking', bookingSchema);
+const HotelBooking = mongoose.model('HotelBooking', hotelBookingSchema);
 
 app.get('/flights', async (req:any, res:any) => {
     try {
@@ -69,7 +82,6 @@ app.get('/flights', async (req:any, res:any) => {
     }
 });
 
-const Booking = mongoose.model('Booking', bookingSchema);
 
 app.post('/bookings', async (req:any, res:any) => {
     try {
@@ -126,17 +138,51 @@ app.get('/hotels', async (req:any, res:any) => {
         res.status(500).json({ message: 'Error fetching countries' });
     }
 });
-app.get('/hotels/:country', async (req:any, res:any) => {
-    const country = req.params.country;
-
+app.get('/hotels/:pays', async (req:any, res:any) => {
     try {
-        const hotels = await Hotel.find({ pays: country }, { _id: 0, hotels: 1 });
+        const hotels = await Hotel.find({ pays: req.params.pays });
         res.json(hotels);
     } catch (error) {
         res.status(500).json({ message: 'Error fetching hotels' });
     }
 });
+app.post('/hotelBookings', async (req:any, res:any) => {
+    try {
+        const hotelBooking = new HotelBooking(req.body);
+        await hotelBooking.save();
+        res.json({ message: 'booking created successfully', data: hotelBooking });
+    } catch (error) {
+        res.status(500).json({ message: 'Error creating booking' });
+    }
+});
 
+app.get('/hotelBookings', async (req:any, res:any) => {
+    try {
+        const hotelBooking = await HotelBooking.find().exec();
+        res.json(hotelBooking);
+    } catch (err) {
+        res.status(500).json({ message: "erreur" });
+    }
+});
+
+
+app.put('/hotelBookings/:id', async (req:any, res:any) => {
+    try {
+        const hotelBookings = await HotelBooking.findByIdAndUpdate(req.params.id, req.body, { new: true });
+        res.json({ message: 'Booking updated successfully', data: HotelBooking });
+    } catch (error) {
+        res.status(500).json({ message: 'Error updating Booking'});
+    }
+});
+
+app.delete('/hotelBookings/:id', async (req:any, res:any) => {
+    try {
+        const hotelBookings = await HotelBooking.findByIdAndDelete(req.params.id);
+        res.json({ message: 'Booking deleted successfully', data: HotelBooking });
+    } catch (error) {
+        res.status(500).json({ message: 'Error deleting booking' });
+    }
+});
 app.listen(PORT, () => {
     console.log(`Server is running on http://localhost:${PORT}`);
 });

@@ -53,8 +53,20 @@ const hotelSchema = new mongoose.Schema({
         description: { type: String, required: true },
     },
 });
+const hotelBookingSchema = new mongoose.Schema({
+    pays: { type: String, required: true },
+    name: { type: String, required: true },
+    location: { type: String, required: true },
+    price: { type: Number, required: true },
+    description: { type: String, required: true },
+    nbRoom: { type: Number, required: true },
+    date: { type: String, required: true },
+    duration: { type: Number, required: true }
+});
 const Flight = mongoose.model('Flight', flightSchema);
 const Hotel = mongoose.model('Hotel', hotelSchema);
+const Booking = mongoose.model('Booking', bookingSchema);
+const HotelBooking = mongoose.model('HotelBooking', hotelBookingSchema);
 app.get('/flights', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const flights = yield Flight.find().exec();
@@ -64,7 +76,6 @@ app.get('/flights', (req, res) => __awaiter(void 0, void 0, void 0, function* ()
         res.status(500).json({ message: "erreur" });
     }
 }));
-const Booking = mongoose.model('Booking', bookingSchema);
 app.post('/bookings', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const booking = new Booking(req.body);
@@ -120,14 +131,50 @@ app.get('/hotels', (req, res) => __awaiter(void 0, void 0, void 0, function* () 
         res.status(500).json({ message: 'Error fetching countries' });
     }
 }));
-app.get('/hotels/:country', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const country = req.params.country;
+app.get('/hotels/:pays', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const hotels = yield Hotel.find({ pays: country }, { _id: 0, hotels: 1 });
+        const hotels = yield Hotel.find({ pays: req.params.pays });
         res.json(hotels);
     }
     catch (error) {
         res.status(500).json({ message: 'Error fetching hotels' });
+    }
+}));
+app.post('/hotelBookings', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const hotelBooking = new HotelBooking(req.body);
+        yield hotelBooking.save();
+        res.json({ message: 'booking created successfully', data: hotelBooking });
+    }
+    catch (error) {
+        res.status(500).json({ message: 'Error creating booking' });
+    }
+}));
+app.get('/hotelBookings', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const hotelBooking = yield HotelBooking.find().exec();
+        res.json(hotelBooking);
+    }
+    catch (err) {
+        res.status(500).json({ message: "erreur" });
+    }
+}));
+app.put('/hotelBookings/:id', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const hotelBookings = yield HotelBooking.findByIdAndUpdate(req.params.id, req.body, { new: true });
+        res.json({ message: 'Booking updated successfully', data: HotelBooking });
+    }
+    catch (error) {
+        res.status(500).json({ message: 'Error updating Booking' });
+    }
+}));
+app.delete('/hotelBookings/:id', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const hotelBookings = yield HotelBooking.findByIdAndDelete(req.params.id);
+        res.json({ message: 'Booking deleted successfully', data: HotelBooking });
+    }
+    catch (error) {
+        res.status(500).json({ message: 'Error deleting booking' });
     }
 }));
 app.listen(PORT, () => {
